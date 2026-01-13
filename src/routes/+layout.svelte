@@ -88,7 +88,7 @@
              flex flex-col gap-3 sm:flex-row sm:justify-between"
         >
             <div>
-                © {new Date().getFullYear()} sticky-form
+                © {new Date().getFullYear()} sticky form by bitboxx
             </div>
 
             <div class="flex gap-4">
