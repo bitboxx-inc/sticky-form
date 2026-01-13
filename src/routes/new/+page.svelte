@@ -6,6 +6,7 @@
     StickyFieldType,
     StickyFormMeta
   } from "$lib/types";
+  import {base} from "$app/paths";
 
   const DRAFT_KEY = "stickyForm:new:draft";
 
@@ -172,7 +173,7 @@
     });
 
     const url =
-      `${location.origin}/forms/${formId}?${params.toString()}`;
+      `${location.origin}/${base}forms/${formId}?${params.toString()}`;
 
     generatedUrl = url;
     qrDataUrl = await QRCode.toDataURL(url, { width: 200, margin: 1 });
