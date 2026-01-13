@@ -1,12 +1,11 @@
 <script lang="ts">
   import QRCode from "qrcode";
-  import {getLang, t} from "$lib/i18n/useI18n";
-  import type {StickyField, StickyFieldType, StickyFormMeta} from "$lib/types";
-  import {base} from "$app/paths";
+  import { getLang, t } from "$lib/i18n/useI18n";
+  import type { StickyField, StickyFieldType, StickyFormMeta } from "$lib/types";
+  import { base } from "$app/paths";
 
   const DRAFT_KEY = "stickyForm:new:draft";
 
-  // 現在の UI 言語（自動）
   let lang = getLang();
 
   let prefillUrl = "";
@@ -17,15 +16,13 @@
   let description = "";
   let author = "";
 
-  let fields: StickyField[] = [{id: "", label: "", type: "text"}];
+  let fields: StickyField[] = [{ id: "", label: "", type: "text" }];
 
-  // Generated result
   let generatedUrl = "";
   let qrDataUrl = "";
   let isGenerated = false;
   let isDirty = false;
 
-  // Toast
   let showToast = false;
   let toastTimer: number | null = null;
 
@@ -42,13 +39,9 @@
       description = d.description ?? "";
       author = d.author ?? "";
       fields = d.fields ?? fields;
-    } catch {
-    }
+    } catch {}
   }
 
-  /* -----------------------------
-   * Utilities
-   * --------------------------- */
   function extractFormId(path: string): string | null {
     const m = path.match(/\/forms\/d\/e\/([^/]+)/);
     return m ? m[1] : null;
@@ -57,14 +50,7 @@
   function saveDraft() {
     localStorage.setItem(
       DRAFT_KEY,
-      JSON.stringify({
-        prefillUrl,
-        formId,
-        title,
-        description,
-        author,
-        fields
-      })
+      JSON.stringify({ prefillUrl, formId, title, description, author, fields })
     );
   }
 
@@ -83,30 +69,20 @@
 
       formId = extracted;
 
-      // 既存 fields を壊さず補完
-      const next = [];
+      const next: StickyField[] = [];
 
       url.searchParams.forEach((v, k) => {
         if (!k.startsWith("entry.")) return;
-
-        const label = decodeURIComponent(v);
-        const existing = next.find(f => f.id === k);
-
-        if (existing) {
-          if (!existing.label) existing.label = label;
-        } else {
-          next.push({id: k, label, type: "text"});
-        }
+        next.push({ id: k, label: decodeURIComponent(v), type: "text" });
       });
 
       fields = next;
       markDirty();
-    } catch {
-    }
+    } catch {}
   }
 
   function addField() {
-    fields = [...fields, {id: "", label: "", type: "text"}];
+    fields = [...fields, { id: "", label: "", type: "text" }];
     markDirty();
   }
 
@@ -144,26 +120,29 @@
 
     const params = new URLSearchParams();
 
-    // 現在の言語をそのまま URL に含める
     params.set("lang", lang);
-
-    // Survey meta（URLに含める）
     params.set("t", title || "無題のアンケート");
     if (description) params.set("d", description);
     if (author) params.set("a", author);
 
-    // entry はそのまま URL に含める
-    fields.forEach(f => {
-      if (f.id && f.label) {
-        params.append(f.id, f.label);
+    fields.forEach((f) => {
+      if (!f.id || !f.label) return;
+
+      // 元の entry（Google Forms 用）
+      params.append(f.id, f.label);
+
+      // sticky-form 用メタ
+      params.append(`${f.id}__type`, f.type);
+
+      if ((f.type === "radio" || f.type === "checkbox") && f.options?.length) {
+        params.append(`${f.id}__opts`, f.options.join(","));
       }
     });
 
-    const url =
-      `${location.origin}${base}/forms/${formId}?${params.toString()}`;
+    const url = `${location.origin}${base}/forms/${formId}?${params.toString()}`;
 
     generatedUrl = url;
-    qrDataUrl = await QRCode.toDataURL(url, {width: 200, margin: 1});
+    qrDataUrl = await QRCode.toDataURL(url, { width: 200, margin: 1 });
 
     const meta: StickyFormMeta = {
       formId,
@@ -175,10 +154,7 @@
       updatedAt: new Date().toISOString()
     };
 
-    localStorage.setItem(
-      `stickyForm:meta:${formId}`,
-      JSON.stringify(meta)
-    );
+    localStorage.setItem(`stickyForm:meta:${formId}`, JSON.stringify(meta));
 
     isGenerated = true;
     isDirty = false;
@@ -189,9 +165,7 @@
     await navigator.clipboard.writeText(generatedUrl);
     showToast = true;
     if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = window.setTimeout(() => {
-      showToast = false;
-    }, 2000);
+    toastTimer = window.setTimeout(() => (showToast = false), 2000);
   }
 </script>
 

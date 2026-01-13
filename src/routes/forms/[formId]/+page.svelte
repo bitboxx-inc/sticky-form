@@ -19,9 +19,9 @@
    * React to URL / params
    * --------------------------- */
   $: {
-    formId = $page.params.formId;
-
     const params = $page.url.searchParams;
+
+    formId = $page.params.formId;
     lang = (params.get("lang") as "en" | "ja") || lang;
 
     title = params.get("t") || t("forms.defaultTitle", lang);
@@ -46,23 +46,31 @@
     const parsed: StickyField[] = [];
 
     params.forEach((value, key) => {
-      if (!key.startsWith("entry.")) return;
+      if (!key.startsWith("entry.") || key.includes("__")) return;
+
+      const type =
+        (params.get(`${key}__type`) as StickyField["type"]) ?? "text";
+
+      const optsRaw = params.get(`${key}__opts`);
+      const options =
+        optsRaw ? optsRaw.split(",").map(v => v.trim()).filter(Boolean) : undefined;
 
       parsed.push({
         id: key,
         label: value,
-        type: "text"
+        type,
+        options
       });
     });
 
-    // restore type / options from meta if exists
+    // fallback: merge local meta if exists
     const raw = localStorage.getItem(`stickyForm:meta:${formId}`);
     if (raw) {
       try {
         const meta = JSON.parse(raw);
         fields = parsed.map((f) => {
           const m = meta.fields?.find((x) => x.id === f.id);
-          return m ? { ...f, ...m } : f;
+          return m ? { ...f, ...m, type: f.type, options: f.options } : f;
         });
         return;
       } catch {}
@@ -126,7 +134,6 @@
     localStorage.removeItem(answersKey());
     values = {};
   }
-
 </script>
 
 <section class="max-w-xl mx-auto px-4 py-16">
@@ -191,12 +198,11 @@
                                 <input
                                         type="radio"
                                         name={field.id}
-                                        value={opt}
                                         checked={values[field.id] === opt}
                                         on:change={() => {
-                    values[field.id] = opt;
-                    saveAnswers();
-                  }}
+                                          values[field.id] = opt;
+                                          saveAnswers();
+                                        }}
                                 />
                                 {opt}
                             </label>
@@ -212,13 +218,13 @@
                                         type="checkbox"
                                         checked={(values[field.id] ?? []).includes(opt)}
                                         on:change={(e) => {
-                    const checked = e.currentTarget.checked;
-                    values[field.id] ||= [];
-                    values[field.id] = checked
-                      ? [...values[field.id], opt]
-                      : values[field.id].filter((v) => v !== opt);
-                    saveAnswers();
-                  }}
+                                          const checked = e.currentTarget.checked;
+                                          values[field.id] ||= [];
+                                          values[field.id] = checked
+                                            ? [...values[field.id], opt]
+                                            : values[field.id].filter(v => v !== opt);
+                                          saveAnswers();
+                                        }}
                                 />
                                 {opt}
                             </label>
