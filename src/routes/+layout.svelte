@@ -1,0 +1,108 @@
+<script lang="ts">
+  import "../app.css";
+  import { page } from "$app/stores";
+  import { getLang, t } from "$lib/i18n/useI18n";
+  import { derived } from "svelte/store";
+
+  export let data;
+
+  // 現在の言語
+  let lang = getLang();
+
+  // ?lang= を維持したリンク生成
+  const withLang = (path: string) => {
+    return `${path}?lang=${lang}`;
+  };
+
+  function changeLang(next: "en" | "ja") {
+    lang = next;
+    localStorage.setItem("lang", next);
+
+    // 現在ページを lang 付きでリロード
+    const url = new URL(window.location.href);
+    url.searchParams.set("lang", next);
+    window.location.href = url.toString();
+  }
+</script>
+
+<div class="min-h-screen flex flex-col bg-white text-gray-900">
+    <!-- Header -->
+    <header class="border-b border-gray-200">
+        <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+            <a href="/" class="font-semibold text-lg tracking-tight">
+                Sticky form
+            </a>
+
+            <nav class="flex items-center gap-6 text-sm text-gray-600">
+                <a href={withLang("/docs")} class="hover:text-gray-900">
+                    {t("layout.docs", lang)}
+                </a>
+                <a href={withLang("/new")} class="hover:text-gray-900">
+                    {t("layout.create", lang)}
+                </a>
+                <a href={withLang("/privacy")} class="hover:text-gray-900">
+                    {t("layout.privacy", lang)}
+                </a>
+
+                <a
+                        href="https://github.com/yourname/sticky-form"
+                        target="_blank"
+                        rel="noopener"
+                        class="hover:text-gray-900"
+                >
+                    {t("layout.github", lang)}
+                </a>
+
+                <!-- Language switch -->
+                <div class="flex items-center gap-2 ml-2">
+                    <button
+                            on:click={() => changeLang("en")}
+                            class="text-xs px-2 py-1 rounded border hover:bg-gray-100"
+                            class:font-semibold={lang === "en"}
+                    >
+                        EN
+                    </button>
+                    <button
+                            on:click={() => changeLang("ja")}
+                            class="text-xs px-2 py-1 rounded border hover:bg-gray-100"
+                            class:font-semibold={lang === "ja"}
+                    >
+                        JA
+                    </button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="flex-1">
+        <slot />
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-200">
+        <div
+                class="max-w-6xl mx-auto px-4 py-8 text-sm text-gray-500
+             flex flex-col gap-3 sm:flex-row sm:justify-between"
+        >
+            <div>
+                © {new Date().getFullYear()} sticky-form
+            </div>
+
+            <div class="flex gap-4">
+                <a href={withLang("/about")} class="hover:text-gray-800">
+                    {t("layout.about", lang)}
+                </a>
+                <a href={withLang("/terms")} class="hover:text-gray-800">
+                    {t("layout.terms", lang)}
+                </a>
+                <a href={withLang("/privacy")} class="hover:text-gray-800">
+                    {t("layout.privacy", lang)}
+                </a>
+                <a href={withLang("/contact")} class="hover:text-gray-800">
+                    {t("layout.contact", lang)}
+                </a>
+            </div>
+        </div>
+    </footer>
+</div>

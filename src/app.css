@@ -1,0 +1,6 @@
+/* src/app.css */
+@import "tailwindcss";
+
+/* お好みのグローバル（任意） */
+:root { color-scheme: light; }
+html, body { height: 100%; }
