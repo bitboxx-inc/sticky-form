@@ -19,7 +19,7 @@ const config = {
       strict: true
     }),
     paths: {
-      base: isProdPages ? '/wellbeing-room' : ''
+      base: isProdPages ? '/sticky-form' : ''
     }
     // paths: {
     // 	base: process.argv.includes('dev') ? '' : process.env.BASE_PATH
