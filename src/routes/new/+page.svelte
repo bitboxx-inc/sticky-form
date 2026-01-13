@@ -283,7 +283,7 @@
     <!-- Prefilled URL -->
     <div class="mb-10">
         <label class="block text-sm font-medium mb-1">
-            {t("new.prefillLabel", lang)}
+            {t("new.prefillLabel", lang)} <span class="text-red-500">*</span>
         </label>
 
         <input
