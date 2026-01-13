@@ -84,7 +84,7 @@
       formId = extracted;
 
       // 既存 fields を壊さず補完
-      const next = [...fields];
+      const next = [];
 
       url.searchParams.forEach((v, k) => {
         if (!k.startsWith("entry.")) return;
@@ -111,7 +111,6 @@
   }
 
   function removeField(i: number) {
-    if (fields.length === 1) return;
     fields = fields.filter((_, idx) => idx !== i);
     markDirty();
   }
