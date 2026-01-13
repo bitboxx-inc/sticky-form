@@ -249,9 +249,4 @@
     >
         {t("forms.reset", lang) ?? "Reset saved answers"}
     </button>
-
-    <p class="text-xs text-gray-500 mt-4 text-center">
-        {t("forms.redirectNotice", lang) ??
-        "You will be redirected to Google Forms. Your answers will be pre-filled."}
-    </p>
 </section>
