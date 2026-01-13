@@ -1,8 +1,7 @@
 <script lang="ts">
   import "../app.css";
-  import { page } from "$app/stores";
   import { getLang, t } from "$lib/i18n/useI18n";
-  import { derived } from "svelte/store";
+  import {base} from "$app/paths";
 
   export let data;
 
@@ -11,7 +10,7 @@
 
   // ?lang= を維持したリンク生成
   const withLang = (path: string) => {
-    return `${path}?lang=${lang}`;
+    return `${base}/${path}?lang=${lang}`;
   };
 
   function changeLang(next: "en" | "ja") {
