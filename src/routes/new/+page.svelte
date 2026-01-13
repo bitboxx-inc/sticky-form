@@ -1,31 +1,23 @@
 <script lang="ts">
   import QRCode from "qrcode";
-  import { getLang, t } from "$lib/i18n/useI18n";
-  import type {
-    StickyField,
-    StickyFieldType,
-    StickyFormMeta
-  } from "$lib/types";
-  import { base } from "$app/paths";
+  import {getLang, t} from "$lib/i18n/useI18n";
+  import type {StickyField, StickyFieldType, StickyFormMeta} from "$lib/types";
+  import {base} from "$app/paths";
 
   const DRAFT_KEY = "stickyForm:new:draft";
 
-  /* -----------------------------
-   * State
-   * --------------------------- */
+  // 現在の UI 言語（自動）
   let lang = getLang();
 
   let prefillUrl = "";
   let formId: string | null = null;
 
-  // Survey meta（URLに含める）
+  // Survey meta（URLに必ず含める）
   let title = "無題のアンケート";
   let description = "";
   let author = "";
 
-  let fields: StickyField[] = [
-    { id: "", label: "", type: "text" }
-  ];
+  let fields: StickyField[] = [{id: "", label: "", type: "text"}];
 
   // Generated result
   let generatedUrl = "";
@@ -43,22 +35,23 @@
   const draft = localStorage.getItem(DRAFT_KEY);
   if (draft) {
     try {
-      const parsed = JSON.parse(draft);
-      prefillUrl = parsed.prefillUrl ?? "";
-      formId = parsed.formId ?? null;
-      title = parsed.title ?? title;
-      description = parsed.description ?? "";
-      author = parsed.author ?? "";
-      fields = parsed.fields ?? fields;
-    } catch {}
+      const d = JSON.parse(draft);
+      prefillUrl = d.prefillUrl ?? "";
+      formId = d.formId ?? null;
+      title = d.title ?? title;
+      description = d.description ?? "";
+      author = d.author ?? "";
+      fields = d.fields ?? fields;
+    } catch {
+    }
   }
 
   /* -----------------------------
    * Utilities
    * --------------------------- */
-  function extractFormId(pathname: string): string | null {
-    const match = pathname.match(/\/forms\/d\/e\/([^/]+)/);
-    return match ? match[1] : null;
+  function extractFormId(path: string): string | null {
+    const m = path.match(/\/forms\/d\/e\/([^/]+)/);
+    return m ? m[1] : null;
   }
 
   function saveDraft() {
@@ -89,89 +82,78 @@
       if (!extracted) return;
 
       formId = extracted;
-      fields = [];
 
-      url.searchParams.forEach((value, key) => {
-        if (key.startsWith("entry.")) {
-          fields.push({
-            id: key,
-            label: decodeURIComponent(value),
-            type: "text"
-          });
+      // 既存 fields を壊さず補完
+      const next = [...fields];
+
+      url.searchParams.forEach((v, k) => {
+        if (!k.startsWith("entry.")) return;
+
+        const label = decodeURIComponent(v);
+        const existing = next.find(f => f.id === k);
+
+        if (existing) {
+          if (!existing.label) existing.label = label;
+        } else {
+          next.push({id: k, label, type: "text"});
         }
       });
 
-      if (fields.length === 0) {
-        fields = [{ id: "", label: "", type: "text" }];
-      }
-
+      fields = next;
       markDirty();
-    } catch {}
+    } catch {
+    }
   }
 
   function addField() {
-    fields = [...fields, { id: "", label: "", type: "text" }];
+    fields = [...fields, {id: "", label: "", type: "text"}];
     markDirty();
   }
 
-  function removeField(index: number) {
+  function removeField(i: number) {
     if (fields.length === 1) return;
-    fields = fields.filter((_, i) => i !== index);
+    fields = fields.filter((_, idx) => idx !== i);
     markDirty();
   }
 
-  function updateField(
-    index: number,
-    key: keyof StickyField,
-    value: any
-  ) {
-    const field = fields[index];
+  function updateField(i: number, key: keyof StickyField, val: any) {
+    const f = fields[i];
 
     if (key === "type") {
-      field.type = value as StickyFieldType;
-      if (value === "radio" || value === "checkbox") {
-        field.options ??= [];
+      f.type = val as StickyFieldType;
+      if (val === "radio" || val === "checkbox") {
+        f.options ??= [];
       } else {
-        delete field.options;
+        delete f.options;
       }
     } else {
-      (field as any)[key] = value;
+      (f as any)[key] = val;
     }
-
-    fields = [...fields];
-    markDirty();
-  }
-
-  function updateOptions(index: number, raw: string) {
-    fields[index].options = raw
-      .split(",")
-      .map(v => v.trim())
-      .filter(Boolean);
 
     fields = [...fields];
     markDirty();
   }
 
   /* -----------------------------
-   * Generate
+   * Generate URL & QR
    * --------------------------- */
   async function generate() {
     if (!formId) {
-      alert(t("new.formIdMissing", lang) || "Google Form URL is required");
+      alert(t("new.formIdMissing", lang) || "Google Forms URL is required");
       return;
     }
 
     const params = new URLSearchParams();
 
-    // language
+    // 現在の言語をそのまま URL に含める
     params.set("lang", lang);
 
-    // survey meta（★ URLに組み込む）
-    params.set("t", title.trim() || "無題のアンケート");
-    if (description.trim()) params.set("d", description.trim());
-    if (author.trim()) params.set("a", author.trim());
+    // Survey meta（URLに含める）
+    params.set("t", title || "無題のアンケート");
+    if (description) params.set("d", description);
+    if (author) params.set("a", author);
 
-    // sticky fields
+    // entry はそのまま URL に含める
     fields.forEach(f => {
       if (f.id && f.label) {
         params.append(f.id, f.label);
@@ -182,15 +164,15 @@
       `${location.origin}${base}/forms/${formId}?${params.toString()}`;
 
     generatedUrl = url;
-    qrDataUrl = await QRCode.toDataURL(url, { width: 200, margin: 1 });
+    qrDataUrl = await QRCode.toDataURL(url, {width: 200, margin: 1});
 
     const meta: StickyFormMeta = {
       formId,
-      lang,
-      title: title.trim() || "無題のアンケート",
-      description: description.trim() || undefined,
-      author: author.trim() || undefined,
+      title,
+      description,
+      author,
       fields,
+      lang,
       updatedAt: new Date().toISOString()
     };
 
@@ -204,14 +186,7 @@
     saveDraft();
   }
 
-  function changeLang(next: "en" | "ja") {
-    lang = next;
-    localStorage.setItem("lang", next);
-    markDirty();
-  }
-
   async function copy() {
-    if (!generatedUrl) return;
     await navigator.clipboard.writeText(generatedUrl);
     showToast = true;
     if (toastTimer) clearTimeout(toastTimer);
@@ -229,24 +204,6 @@
     <p class="text-sm text-gray-600 mb-10">
         {t("new.description", lang)}
     </p>
-
-    <!-- Language -->
-    <div class="mb-8">
-        <label class="block text-sm font-medium mb-2">
-            {t("common.language", lang)}
-        </label>
-
-        <div class="flex gap-4 text-sm">
-            <label class="flex items-center gap-2">
-                <input type="radio" checked={lang === "en"} on:change={() => changeLang("en")} />
-                English
-            </label>
-            <label class="flex items-center gap-2">
-                <input type="radio" checked={lang === "ja"} on:change={() => changeLang("ja")} />
-                日本語
-            </label>
-        </div>
-    </div>
 
     <!-- Survey meta -->
     <div class="mb-10 space-y-4">
@@ -287,6 +244,150 @@
         </div>
     </div>
 
-    <!-- 以降 UI 部分はそのまま -->
-    <!-- Sticky fields / Generate / Result / Toast は元コードと同一 -->
+    <!-- Prefilled URL -->
+    <div class="mb-10">
+        <label class="block text-sm font-medium mb-1">
+            {t("new.prefillLabel", lang)} <span class="text-red-500">*</span>
+        </label>
+
+        <input
+                type="text"
+                bind:value={prefillUrl}
+                on:input={parsePrefillUrl}
+                class="w-full rounded-md border px-3 py-2 text-sm"
+        />
+
+        <p class="text-xs text-gray-500 mt-2 whitespace-pre-line">
+            {t("new.prefillHint", lang)}
+        </p>
+    </div>
+
+    <!-- Sticky fields -->
+    <div class="mb-12">
+        <label class="block text-sm font-medium mb-3">
+            {t("new.stickyFields", lang)}
+        </label>
+
+        <div class="space-y-4">
+            {#each fields as field, i}
+                <div class="border rounded-md p-3">
+                    <div class="flex gap-2 items-center mb-2">
+                        <button
+                                type="button"
+                                on:click={() => removeField(i)}
+                                class="text-gray-400 hover:text-red-600 text-lg px-1"
+                        >
+                            ×
+                        </button>
+
+                        <input
+                                type="text"
+                                placeholder="entry.123456"
+                                value={field.id}
+                                on:input={(e) => updateField(i, "id", e.currentTarget.value)}
+                                class="w-44 rounded-md border px-2 py-1 text-sm"
+                        />
+
+                        <input
+                                type="text"
+                                placeholder={t("new.labelPlaceholder", lang)}
+                                value={field.label}
+                                on:input={(e) => updateField(i, "label", e.currentTarget.value)}
+                                class="flex-1 rounded-md border px-2 py-1 text-sm"
+                        />
+
+                        <select
+                                value={field.type}
+                                on:change={(e) => updateField(i, "type", e.currentTarget.value)}
+                                class="rounded-md border px-2 py-1 text-sm"
+                        >
+                            <option value="text">Text</option>
+                            <option value="email">Email</option>
+                            <option value="number">Number</option>
+                            <option value="radio">Radio</option>
+                            <option value="checkbox">Checkbox</option>
+                        </select>
+                    </div>
+                    {#if field.type === "radio" || field.type === "checkbox"}
+                        <input
+                                type="text"
+                                placeholder={t("new.optionsPlaceholder", lang) || "Options (comma separated)"}
+                                value={(field.options ?? []).join(", ")}
+                                on:input={(e) => {
+                                  field.options = e.currentTarget.value
+                                    .split(",")
+                                    .map(v => v.trim())
+                                    .filter(Boolean);
+                                  fields = [...fields];
+                                  markDirty();
+                                }}
+                                class="w-full rounded-md border px-2 py-1 text-sm"
+                        />
+
+                        <p class="text-xs text-gray-500 mt-1">
+                            {t("new.optionsHint", lang) ||
+                            "Enter the same option labels as defined in Google Forms."}
+                        </p>
+                    {/if}
+                </div>
+            {/each}
+        </div>
+
+        <button on:click={addField} class="mt-4 text-sm hover:underline">
+            + {t("common.addField", lang)}
+        </button>
+    </div>
+
+    <!-- Generate -->
+    <div class="mb-12">
+        <button
+                on:click={generate}
+                class="w-full rounded-md bg-gray-900 text-white py-3 text-sm font-medium hover:bg-gray-800"
+        >
+            {isGenerated ? t("new.regenerate", lang) : t("new.generate", lang)}
+        </button>
+
+        {#if isGenerated && !isDirty}
+            <p class="text-xs text-green-600 mt-2 text-center">
+                {t("new.generatedOk", lang)}
+            </p>
+        {/if}
+
+        {#if isGenerated && isDirty}
+            <p class="text-xs text-amber-600 mt-2 text-center">
+                {t("new.needsRegenerate", lang)}
+            </p>
+        {/if}
+    </div>
+
+    <!-- Generated result -->
+    {#if isGenerated}
+        <div class="border-t border-gray-200 pt-8">
+            <div class="flex gap-2 mb-6">
+                <input
+                        type="text"
+                        readonly
+                        value={generatedUrl}
+                        class="flex-1 rounded-md border px-3 py-2 text-sm bg-gray-50"
+                />
+                <button on:click={copy} class="border px-4 text-sm rounded-md">
+                    {t("common.copy", lang)}
+                </button>
+            </div>
+
+            <div class="flex justify-center">
+                <img src={qrDataUrl} alt="QR code"/>
+            </div>
+        </div>
+    {/if}
+
+    {#if showToast}
+        <div
+                class="fixed bottom-6 left-1/2 -translate-x-1/2
+             bg-gray-900 text-white
+             px-4 py-2 text-sm rounded-md"
+        >
+            {t("common.copied", lang) || "Link copied"}
+        </div>
+    {/if}
 </section>

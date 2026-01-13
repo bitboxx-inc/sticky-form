@@ -6,37 +6,29 @@
   let lang = getLang();
   let formId = "";
 
-  // Survey meta
   let title = "";
   let description = "";
   let author = "";
 
-  // Fields & answers
   let fields: StickyField[] = [];
   let values: Record<string, any> = {};
 
   const unsubscribe = page.subscribe(($page) => {
     formId = $page.params.formId;
+    const p = $page.url.searchParams;
 
-    const params = $page.url.searchParams;
+    lang = (p.get("lang") as "en" | "ja") || lang;
 
-    // language
-    lang = (params.get("lang") as "en" | "ja") || lang;
+    // URL first
+    title = p.get("t") ?? "Survey";
+    description = p.get("d") ?? "";
+    author = p.get("a") ?? "";
 
-    // load meta (URL -> localStorage -> default)
-    loadMetaFromUrl(params);
-    loadMetaFromStorage();
-
-    // fields
-    parseFields(params);
-
-    // restore answers
+    loadMeta();
     restoreAnswers();
+    applyUrlPrefill(p);
   });
 
-  /* ----------------------------------
-   * Keys
-   * -------------------------------- */
   function metaKey() {
     return `stickyForm:meta:${formId}`;
   }
@@ -45,132 +37,78 @@
     return `stickyForm:answers:${formId}`;
   }
 
-  /* ----------------------------------
-   * Meta
-   * -------------------------------- */
-  function loadMetaFromUrl(params: URLSearchParams) {
-    title =
-      params.get("t") ??
-      t("forms.defaultTitle", lang) ??
-      "Survey";
-
-    description = params.get("d") ?? "";
-    author = params.get("a") ?? "";
-  }
-
-  function loadMetaFromStorage() {
-    // URL が優先なので、足りない部分だけ補完
+  function loadMeta() {
     const raw = localStorage.getItem(metaKey());
     if (!raw) return;
 
     try {
       const meta = JSON.parse(raw) as StickyFormMeta;
-
-      if (!title && meta.title) title = meta.title;
-      if (!description && meta.description) description = meta.description;
-      if (!author && meta.author) author = meta.author;
-    } catch {
-      // ignore
-    }
+      fields = meta.fields ?? fields;
+      if (!title) title = meta.title;
+      if (!description) description = meta.description ?? "";
+      if (!author) author = meta.author ?? "";
+    } catch {}
   }
 
-  /* ----------------------------------
-   * Fields
-   * -------------------------------- */
-  function parseFields(params: URLSearchParams) {
-    fields = [];
-
-    params.forEach((value, key) => {
-      if (key.startsWith("entry.")) {
-        fields.push({
-          id: key,
-          label: value,
-          type: "text"
-        });
-      }
-    });
-  }
-
-  /* ----------------------------------
-   * Answers
-   * -------------------------------- */
   function restoreAnswers() {
     const raw = localStorage.getItem(answersKey());
     if (!raw) return;
-
     try {
       values = JSON.parse(raw);
-    } catch {
-      values = {};
-    }
+    } catch {}
+  }
+
+  function applyUrlPrefill(p: URLSearchParams) {
+    p.forEach((v, k) => {
+      if (k.startsWith("entry.") && values[k] == null) {
+        values[k] = v;
+      }
+    });
   }
 
   function saveAnswers() {
     localStorage.setItem(answersKey(), JSON.stringify(values));
   }
 
-  /* ----------------------------------
-   * Submit
-   * -------------------------------- */
   function submit() {
     saveAnswers();
-
-    const params = new URLSearchParams();
-
-    fields.forEach((f) => {
-      const v = values[f.id];
-      if (v !== undefined && v !== "") {
-        params.append(f.id, v);
-      }
+    const p = new URLSearchParams();
+    fields.forEach(f => {
+      if (values[f.id]) p.append(f.id, values[f.id]);
     });
 
-    const target =
-      `https://docs.google.com/forms/d/e/${formId}/viewform?` +
-      params.toString();
-
-    window.location.href = target;
+    window.location.href =
+      `https://docs.google.com/forms/d/e/${formId}/viewform?` + p;
   }
 
   $: unsubscribe;
 </script>
 
+<svelte:head>
+    <title>{title} | Sticky form</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="googlebot" content="noindex, nofollow" />
+    <meta name="description" content={description} />
+</svelte:head>
+
 <section class="max-w-xl mx-auto px-4 py-16">
-    <!-- Header -->
-    <div class="mb-10 text-center">
-        <h1 class="text-2xl font-semibold mb-2">
-            {title}
-        </h1>
-
-        {#if description}
-            <p class="text-sm text-gray-600 mb-2">
-                {description}
-            </p>
-        {/if}
-
-        {#if author}
-            <p class="text-xs text-gray-500">
-                {author}
-            </p>
-        {/if}
+    <div class="text-center mb-10">
+        <h1 class="text-2xl font-semibold">{title}</h1>
+        {#if description}<p class="text-sm text-gray-600">{description}</p>{/if}
+        {#if author}<p class="text-xs text-gray-500">{author}</p>{/if}
     </div>
 
-    <!-- Notice -->
     <p class="text-sm text-gray-600 mb-8 text-center">
-        {t("forms.description", lang) ??
-        "Your answers will be remembered on this device. After confirming, you will be redirected to Google Forms."}
+        {t("forms.description", lang)}
     </p>
 
-    <!-- Fields -->
     <div class="space-y-6 mb-10">
-        {#each fields as field}
+        {#each fields as f}
             <div>
-                <label class="block text-sm font-medium mb-1">
-                    {field.label}
-                </label>
-
+                <label class="block text-sm font-medium mb-1">{f.label}</label>
                 <input
                         type="text"
-                        bind:value={values[field.id]}
+                        bind:value={values[f.id]}
                         on:input={saveAnswers}
                         class="w-full rounded-md border px-3 py-2 text-sm"
                 />
@@ -178,16 +116,10 @@
         {/each}
     </div>
 
-    <!-- Submit -->
     <button
             on:click={submit}
-            class="w-full rounded-md bg-gray-900 text-white py-3 text-sm font-medium hover:bg-gray-800"
+            class="w-full rounded-md bg-gray-900 text-white py-3 text-sm font-medium"
     >
-        {t("forms.submit", lang) ?? "Continue to Google Forms"}
+        {t("forms.submit", lang)}
     </button>
-
-    <p class="text-xs text-gray-500 mt-4 text-center">
-        {t("forms.redirectNotice", lang) ??
-        "You will be redirected to Google Forms. Your answers will be pre-filled."}
-    </p>
 </section>
