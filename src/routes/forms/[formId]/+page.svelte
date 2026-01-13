@@ -6,12 +6,12 @@
   let lang = getLang();
   let formId = "";
 
-  // meta
+  // Survey meta
   let title = "";
   let description = "";
   let author = "";
 
-  // fields & values
+  // Fields & answers
   let fields: StickyField[] = [];
   let values: Record<string, any> = {};
 
@@ -19,13 +19,24 @@
     formId = $page.params.formId;
 
     const params = $page.url.searchParams;
+
+    // language
     lang = (params.get("lang") as "en" | "ja") || lang;
 
-    loadMeta();
+    // load meta (URL -> localStorage -> default)
+    loadMetaFromUrl(params);
+    loadMetaFromStorage();
+
+    // fields
     parseFields(params);
+
+    // restore answers
     restoreAnswers();
   });
 
+  /* ----------------------------------
+   * Keys
+   * -------------------------------- */
   function metaKey() {
     return `stickyForm:meta:${formId}`;
   }
@@ -34,29 +45,41 @@
     return `stickyForm:answers:${formId}`;
   }
 
-  function loadMeta() {
+  /* ----------------------------------
+   * Meta
+   * -------------------------------- */
+  function loadMetaFromUrl(params: URLSearchParams) {
+    title =
+      params.get("t") ??
+      t("forms.defaultTitle", lang) ??
+      "Survey";
+
+    description = params.get("d") ?? "";
+    author = params.get("a") ?? "";
+  }
+
+  function loadMetaFromStorage() {
+    // URL が優先なので、足りない部分だけ補完
     const raw = localStorage.getItem(metaKey());
-    if (!raw) {
-      title = t("forms.defaultTitle", lang) || "Survey";
-      description = "";
-      author = "";
-      return;
-    }
+    if (!raw) return;
 
     try {
       const meta = JSON.parse(raw) as StickyFormMeta;
-      title = meta.title || t("forms.defaultTitle", lang);
-      description = meta.description || "";
-      author = meta.author || "";
+
+      if (!title && meta.title) title = meta.title;
+      if (!description && meta.description) description = meta.description;
+      if (!author && meta.author) author = meta.author;
     } catch {
-      title = t("forms.defaultTitle", lang) || "Survey";
-      description = "";
-      author = "";
+      // ignore
     }
   }
 
+  /* ----------------------------------
+   * Fields
+   * -------------------------------- */
   function parseFields(params: URLSearchParams) {
     fields = [];
+
     params.forEach((value, key) => {
       if (key.startsWith("entry.")) {
         fields.push({
@@ -68,6 +91,9 @@
     });
   }
 
+  /* ----------------------------------
+   * Answers
+   * -------------------------------- */
   function restoreAnswers() {
     const raw = localStorage.getItem(answersKey());
     if (!raw) return;
@@ -83,13 +109,18 @@
     localStorage.setItem(answersKey(), JSON.stringify(values));
   }
 
+  /* ----------------------------------
+   * Submit
+   * -------------------------------- */
   function submit() {
     saveAnswers();
 
     const params = new URLSearchParams();
+
     fields.forEach((f) => {
-      if (values[f.id]) {
-        params.append(f.id, values[f.id]);
+      const v = values[f.id];
+      if (v !== undefined && v !== "") {
+        params.append(f.id, v);
       }
     });
 
@@ -125,8 +156,8 @@
 
     <!-- Notice -->
     <p class="text-sm text-gray-600 mb-8 text-center">
-        {t("forms.description", lang) ||
-        "Your answers will be remembered on this device. You will be redirected to Google Forms after submitting."}
+        {t("forms.description", lang) ??
+        "Your answers will be remembered on this device. After confirming, you will be redirected to Google Forms."}
     </p>
 
     <!-- Fields -->
@@ -152,12 +183,11 @@
             on:click={submit}
             class="w-full rounded-md bg-gray-900 text-white py-3 text-sm font-medium hover:bg-gray-800"
     >
-        {t("forms.submit", lang) || "Continue to Google Forms"}
+        {t("forms.submit", lang) ?? "Continue to Google Forms"}
     </button>
 
     <p class="text-xs text-gray-500 mt-4 text-center">
-        {t("forms.redirectNotice", lang) ||
+        {t("forms.redirectNotice", lang) ??
         "You will be redirected to Google Forms. Your answers will be pre-filled."}
     </p>
 </section>
-
