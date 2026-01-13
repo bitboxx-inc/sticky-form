@@ -173,7 +173,7 @@
     });
 
     const url =
-      `${location.origin}${base}forms/${formId}?${params.toString()}`;
+      `${location.origin}/${base}forms/${formId}?${params.toString()}`;
 
     generatedUrl = url;
     qrDataUrl = await QRCode.toDataURL(url, { width: 200, margin: 1 });
