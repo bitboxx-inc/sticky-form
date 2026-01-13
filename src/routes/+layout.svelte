@@ -32,12 +32,6 @@
   }
 </script>
 
-<svelte:head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5317460178221367"
-            crossorigin="anonymous"></script>
-    <meta name="google-adsense-account" content="ca-pub-5317460178221367">
-</svelte:head>
-
 <div class="min-h-screen flex flex-col bg-white text-gray-900">
     <!-- Header -->
     <header class="border-b border-gray-200">
