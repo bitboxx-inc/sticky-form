@@ -114,6 +114,19 @@
 
     window.location.href = target;
   }
+
+  function resetAnswers() {
+    const ok = confirm(
+      t("forms.resetConfirm", lang) ??
+      "Clear all saved answers for this form on this device?"
+    );
+
+    if (!ok) return;
+
+    localStorage.removeItem(answersKey());
+    values = {};
+  }
+
 </script>
 
 <section class="max-w-xl mx-auto px-4 py-16">
@@ -222,6 +235,19 @@
             class="w-full rounded-md bg-gray-900 text-white py-3 text-sm font-medium hover:bg-gray-800"
     >
         {t("forms.submit", lang) ?? "Continue to Google Forms"}
+    </button>
+
+    <p class="text-xs text-gray-500 mt-4 text-center">
+        {t("forms.redirectNotice", lang) ??
+        "You will be redirected to Google Forms. Your answers will be pre-filled."}
+    </p>
+
+    <!-- Reset -->
+    <button
+            on:click={resetAnswers}
+            class="mt-6 w-full text-sm text-gray-500 hover:text-red-600 underline"
+    >
+        {t("forms.reset", lang) ?? "Reset saved answers"}
     </button>
 
     <p class="text-xs text-gray-500 mt-4 text-center">

@@ -57,7 +57,9 @@ export const messages = {
         "You will be redirected to Google Forms. Your answers will be pre-filled.",
       continue: "Continue to Google Forms",
       disclaimer:
-        "This service is not affiliated with Google. Google Forms is a trademark of Google LLC."
+        "This service is not affiliated with Google. Google Forms is a trademark of Google LLC.",
+      reset: "保存された入力をリセット",
+      resetConfirm: "この端末に保存されている入力内容をすべて削除しますか？"
     },
 
     docs: {
@@ -258,7 +260,9 @@ export const messages = {
         "このあと Google フォームに移動し、入力内容が自動で反映されます。",
       continue: "Google フォームへ進む",
       disclaimer:
-        "本サービスは Google とは提携していません。Google Forms は Google LLC の商標です。"
+        "本サービスは Google とは提携していません。Google Forms は Google LLC の商標です。",
+      reset: "保存された入力をリセット",
+      resetConfirm: "この端末に保存されている入力内容をすべて削除しますか？"
     },
 
     docs: {
