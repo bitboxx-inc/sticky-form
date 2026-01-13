@@ -1,8 +1,6 @@
 import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
-const isProdPages = process.env.DEPLOY_TARGET === 'gh-pages';
-
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   preprocess: vitePreprocess(),
@@ -15,7 +13,7 @@ const config = {
     }),
 
     paths: {
-      base: isProdPages ? '/sticky-form' : ''
+      base: ''
     }
   }
 };
