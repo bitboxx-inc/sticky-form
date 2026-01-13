@@ -10,7 +10,7 @@
 
   // ?lang= を維持したリンク生成
   const withLang = (path: string) => {
-    return `${base}/${path}?lang=${lang}`;
+    return `${base}${path}?lang=${lang}`;
   };
 
   function changeLang(next: "en" | "ja") {
@@ -42,16 +42,6 @@
                 <a href={withLang("/privacy")} class="hover:text-gray-900">
                     {t("layout.privacy", lang)}
                 </a>
-
-                <a
-                        href="https://github.com/yourname/sticky-form"
-                        target="_blank"
-                        rel="noopener"
-                        class="hover:text-gray-900"
-                >
-                    {t("layout.github", lang)}
-                </a>
-
                 <!-- Language switch -->
                 <div class="flex items-center gap-2 ml-2">
                     <button
