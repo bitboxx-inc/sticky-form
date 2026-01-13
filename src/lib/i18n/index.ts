@@ -192,6 +192,15 @@ export const messages = {
 
       disclaimer:
         "sticky-form is an independent tool and is not affiliated with or endorsed by Google. Google Forms is a trademark of Google LLC. All data is stored locally in your browser and never transmitted to any server."
+    },
+
+    "contact": {
+      "title": "Contact",
+      "description": "Get in touch with us regarding enterprise use or custom solutions.",
+      "enterprise": "If you are considering using sticky-form in an enterprise environment, such as internal systems, large-scale operations, or organization-wide surveys, please contact us.",
+      "custom": "We also provide consultation for custom implementations, feature extensions, and integration with existing workflows.",
+      "emailLabel": "Contact email",
+      "note": "Please note that we may not be able to respond to all inquiries, but we will review each message carefully."
     }
   },
 
@@ -382,6 +391,15 @@ export const messages = {
 
       disclaimer:
         "sticky-form は Google とは無関係の独立したツールです。Google Forms は Google LLC の商標です。すべてのデータはブラウザ内にのみ保存され、外部に送信されることはありません。"
+    },
+
+    "contact": {
+      "title": "お問い合わせ",
+      "description": "Enterprise 利用や個別カスタマイズに関するお問い合わせはこちらからお願いいたします。",
+      "enterprise": "sticky-form を企業内システム、組織利用、大規模なアンケート運用などでご検討されている場合は、下記までお問い合わせください。",
+      "custom": "既存業務フローへの組み込み、機能追加、個別要件に応じたカスタマイズについてもご相談を承っています。",
+      "emailLabel": "お問い合わせ先メールアドレス",
+      "note": "内容によってはご返信までお時間をいただく場合、またはご回答できない場合がございます。あらかじめご了承ください。"
     }
   }
 } as const;
