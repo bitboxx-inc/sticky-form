@@ -2,6 +2,7 @@
   import { page } from "$app/stores";
   import { getLang, t } from "$lib/i18n/useI18n";
   import type { StickyField } from "$lib/types";
+  import AdSlot from "$lib/components/AdSlot.svelte";
 
   let lang = getLang();
   let formId = "";
@@ -135,29 +136,54 @@
     values = {};
   }
 </script>
+<section class="max-w-2xl mx-auto px-4 py-16">
 
-<section class="max-w-xl mx-auto px-4 py-16">
-    <!-- Header -->
-    <div class="mb-10 text-center">
-        <h1 class="text-2xl font-semibold mb-2">{title}</h1>
+    <!-- Hero -->
+    <div class="mb-10">
+        <h1 class="text-2xl font-semibold mb-2">
+            {title}
+        </h1>
 
         {#if description}
-            <p class="text-sm text-gray-600 mb-2">{description}</p>
+            <p class="text-sm text-gray-600">
+                {description}
+            </p>
         {/if}
 
         {#if author}
-            <p class="text-xs text-gray-500">{author}</p>
+            <p class="text-xs text-gray-400 mt-1">
+                {author}
+            </p>
         {/if}
     </div>
 
-    <!-- Notice -->
-    <p class="text-sm text-gray-600 mb-8 text-center">
-        {t("forms.description", lang) ??
-        "Your answers will be remembered on this device. You will be redirected to Google Forms after submitting."}
-    </p>
+    <!-- Info card -->
+    <div class="mb-10 rounded-lg border bg-gray-50 p-5 text-sm text-gray-700">
+        <p class="font-medium mb-2">
+            {lang === "ja" ? "このフォームについて" : "About this form"}
+        </p>
 
-    <!-- Fields -->
-    <div class="space-y-6 mb-10">
+        <ul class="space-y-1 text-gray-600">
+            <li>
+                • {lang === "ja"
+              ? "入力内容はこの端末に保存されます"
+              : "Your answers are stored on this device"}
+            </li>
+            <li>
+                • {lang === "ja"
+              ? "次回以降、自動で入力されます"
+              : "Previously entered values are restored automatically"}
+            </li>
+            <li>
+                • {lang === "ja"
+              ? "データは外部に送信されません"
+              : "No data is sent to any server"}
+            </li>
+        </ul>
+    </div>
+
+    <!-- Form card -->
+    <div class="rounded-lg border bg-white p-6 space-y-6 mb-10">
         {#each fields as field}
             <div>
                 <label class="block text-sm font-medium mb-2">
@@ -200,9 +226,9 @@
                                         name={field.id}
                                         checked={values[field.id] === opt}
                                         on:change={() => {
-                                          values[field.id] = opt;
-                                          saveAnswers();
-                                        }}
+                    values[field.id] = opt;
+                    saveAnswers();
+                  }}
                                 />
                                 {opt}
                             </label>
@@ -218,13 +244,13 @@
                                         type="checkbox"
                                         checked={(values[field.id] ?? []).includes(opt)}
                                         on:change={(e) => {
-                                          const checked = e.currentTarget.checked;
-                                          values[field.id] ||= [];
-                                          values[field.id] = checked
-                                            ? [...values[field.id], opt]
-                                            : values[field.id].filter(v => v !== opt);
-                                          saveAnswers();
-                                        }}
+                    const checked = e.currentTarget.checked;
+                    values[field.id] ||= [];
+                    values[field.id] = checked
+                      ? [...values[field.id], opt]
+                      : values[field.id].filter(v => v !== opt);
+                    saveAnswers();
+                  }}
                                 />
                                 {opt}
                             </label>
@@ -238,7 +264,7 @@
     <!-- Submit -->
     <button
             on:click={submit}
-            class="w-full rounded-md bg-gray-900 text-white py-3 text-sm font-medium hover:bg-gray-800"
+            class="w-full max-w-md mx-auto block rounded-md bg-gray-900 text-white py-3 text-sm font-medium hover:bg-gray-800"
     >
         {t("forms.submit", lang) ?? "Continue to Google Forms"}
     </button>
@@ -251,8 +277,14 @@
     <!-- Reset -->
     <button
             on:click={resetAnswers}
-            class="mt-6 w-full text-sm text-gray-500 hover:text-red-600 underline"
+            class="mt-8 text-xs text-gray-400 hover:text-red-600 underline block mx-auto"
     >
         {t("forms.reset", lang) ?? "Reset saved answers"}
     </button>
+
+    <!-- Ad -->
+    <div class="mb-10">
+        <AdSlot />
+    </div>
+
 </section>
