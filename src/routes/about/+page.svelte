@@ -1,89 +1,79 @@
 <script lang="ts">
   import { getLang, t } from "$lib/i18n/useI18n";
-
   let lang = getLang();
 </script>
 
-<section class="max-w-3xl mx-auto px-4 py-20">
-    <!-- Title -->
-    <div class="mb-16">
-        <h1 class="text-3xl font-semibold tracking-tight mb-4">
-            {t("about.title", lang) ?? "About sticky-form"}
-        </h1>
+<section class="max-w-3xl mx-auto px-4 py-16 leading-relaxed">
+    <h1 class="text-2xl font-semibold mb-8">
+        {t("layout.about", lang)}
+    </h1>
 
-        <p class="text-gray-600 leading-relaxed">
-            {t("about.lead", lang) ??
-            "sticky-form is a small utility that adds persistence to Google Forms without changing how they work."}
-        </p>
-    </div>
-
-    <!-- What -->
-    <div class="mb-14">
-        <h2 class="text-xl font-semibold mb-3">
-            {t("about.whatTitle", lang) ?? "What is sticky-form?"}
+    <section class="mb-10">
+        <h2 class="text-lg font-semibold mb-2">
+            What is sticky-form?
         </h2>
-
-        <p class="text-gray-600 leading-relaxed">
-            {t("about.whatBody", lang) ??
-            "sticky-form helps Google Forms remember selected answers on a single device. It is designed for situations where the same person answers similar forms repeatedly and should not have to re-enter the same information every time."}
+        <p class="text-sm text-gray-700">
+            sticky-form is a lightweight web utility designed to reduce repetitive input
+            when using Google Forms. It allows selected answers to be remembered locally
+            on the same device, so respondents do not need to re-enter the same information
+            every time they answer a recurring form.
         </p>
-    </div>
+    </section>
 
-    <!-- Philosophy -->
-    <div class="mb-14">
-        <h2 class="text-xl font-semibold mb-3">
-            {t("about.philosophyTitle", lang) ?? "Design philosophy"}
+    <section class="mb-10">
+        <h2 class="text-lg font-semibold mb-2">
+            Why we built this
         </h2>
+        <p class="text-sm text-gray-700">
+            Google Forms is excellent for collecting responses, but it is primarily designed
+            for one-time submissions. In real-world use cases such as inspections, internal
+            reports, or recurring surveys, the same people are often asked to submit the
+            same basic information repeatedly.
+        </p>
+        <p class="text-sm text-gray-700 mt-3">
+            sticky-form was created to solve this friction without requiring accounts,
+            backend systems, or changes to existing Google Forms.
+        </p>
+    </section>
 
-        <ul class="list-disc list-inside space-y-2 text-gray-600 text-sm leading-relaxed">
-            <li>
-                {t("about.philosophy1", lang) ??
-                "Do not replace Google Forms — extend them."}
-            </li>
-            <li>
-                {t("about.philosophy2", lang) ??
-                "No accounts, no backend, no tracking."}
-            </li>
-            <li>
-                {t("about.philosophy3", lang) ??
-                "All data stays in the browser’s local storage."}
-            </li>
-            <li>
-                {t("about.philosophy4", lang) ??
-                "Works even in restricted or offline-friendly environments."}
-            </li>
+    <section class="mb-10">
+        <h2 class="text-lg font-semibold mb-2">
+            Intended use cases
+        </h2>
+        <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+            <li>Recurring surveys for the same participants</li>
+            <li>On-site inspections and daily checklists</li>
+            <li>Internal reporting forms with fixed basic information</li>
+            <li>QR-code based form workflows</li>
         </ul>
-    </div>
+    </section>
 
-    <!-- Privacy -->
-    <div class="mb-14">
-        <h2 class="text-xl font-semibold mb-3">
-            {t("about.privacyTitle", lang) ?? "Privacy-first by design"}
+    <section class="mb-10">
+        <h2 class="text-lg font-semibold mb-2">
+            Privacy and data handling
         </h2>
-
-        <p class="text-gray-600 leading-relaxed">
-            {t("about.privacyBody", lang) ??
-            "sticky-form does not collect, transmit, or store any personal data on servers. All remembered answers are stored locally on the user’s device and are only sent directly to Google Forms when the user submits the form."}
+        <p class="text-sm text-gray-700">
+            sticky-form does not collect, store, or transmit any personal data to external
+            servers. All remembered values are stored only in the user’s browser using
+            localStorage and never leave the device.
         </p>
-    </div>
+        <p class="text-sm text-gray-700 mt-3">
+            Form submissions themselves are handled entirely by Google Forms, and are
+            subject to Google’s own privacy policy.
+        </p>
+    </section>
 
-    <!-- Use cases -->
-    <div class="mb-14">
-        <h2 class="text-xl font-semibold mb-3">
-            {t("about.useCasesTitle", lang) ?? "Typical use cases"}
+    <section>
+        <h2 class="text-lg font-semibold mb-2">
+            About the operator
         </h2>
-
-        <ul class="list-disc list-inside space-y-2 text-gray-600 text-sm leading-relaxed">
-            <li>{t("about.use1", lang) ?? "On-site inspections and checklists"}</li>
-            <li>{t("about.use2", lang) ?? "Recurring internal surveys"}</li>
-            <li>{t("about.use3", lang) ?? "Events and exhibitions with repeat visitors"}</li>
-            <li>{t("about.use4", lang) ?? "Equipment or facility reporting"}</li>
-        </ul>
-    </div>
-
-    <!-- Disclaimer -->
-    <div class="border-t border-gray-200 pt-8 text-xs text-gray-500 leading-relaxed">
-        {t("about.disclaimer", lang) ??
-        "sticky-form is an independent project and is not affiliated with or endorsed by Google. Google Forms is a trademark of Google LLC."}
-    </div>
+        <p class="text-sm text-gray-700">
+            sticky-form is operated by an independent developer focused on building small,
+            practical tools that improve everyday workflows.
+        </p>
+        <p class="text-sm text-gray-700 mt-3">
+            For enterprise use cases or custom implementations, please contact us via the
+            Contact page.
+        </p>
+    </section>
 </section>

@@ -1,41 +1,39 @@
-import { get } from "svelte/store";
-import { page } from "$app/stores";
-import type { Lang } from "./index";
+import { browser } from "$app/environment";
 import { messages, DEFAULT_LANG } from "./index";
+import type { Lang } from "./types";
 
+/**
+ * 現在の言語を取得
+ */
 export function getLang(): Lang {
-  const urlLang = get(page).url.searchParams.get("lang");
-  if (urlLang === "ja" || urlLang === "en") {
-    localStorage.setItem("lang", urlLang);
-    return urlLang;
-  }
+  if (!browser) return DEFAULT_LANG;
 
   const stored = localStorage.getItem("lang");
-  if (stored === "ja" || stored === "en") return stored;
+  if (stored === "en" || stored === "ja") return stored;
 
   return DEFAULT_LANG;
 }
 
-// 文字列用
-export function t(path: string, lang: Lang): string {
+/**
+ * 翻訳文字列を取得
+ * 例: t("home.heroTitle", "ja")
+ */
+export function t(path: string, lang: Lang): any {
   const keys = path.split(".");
-  let cur: any = messages[lang];
+  let current: any = messages[lang];
 
-  for (const k of keys) {
-    cur = cur?.[k];
+  for (const key of keys) {
+    if (current?.[key] === undefined) return "";
+    current = current[key];
   }
 
-  return typeof cur === "string" ? cur : "";
+  return current;
 }
 
-// 配列用（★追加）
-export function tArray(path: string, lang: Lang): string[] {
-  const keys = path.split(".");
-  let cur: any = messages[lang];
-
-  for (const k of keys) {
-    cur = cur?.[k];
-  }
-
-  return Array.isArray(cur) ? cur : [];
+/**
+ * 配列翻訳用（features, steps, useCases など）
+ */
+export function tArray(path: string, lang: Lang): any[] {
+  const value = t(path, lang);
+  return Array.isArray(value) ? value : [];
 }
