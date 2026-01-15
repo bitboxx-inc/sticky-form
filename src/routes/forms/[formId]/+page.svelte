@@ -16,6 +16,29 @@
   let fields: StickyField[] = [];
   let values: Record<string, any> = {};
 
+  // storage state
+  let storageAvailable = true;
+  let storageErrorMessage = "";
+
+  /* -----------------------------
+   * Storage availability check
+   * --------------------------- */
+  function detectStorageAvailability() {
+    try {
+      const key = "__storage_test__";
+      localStorage.setItem(key, "1");
+      localStorage.removeItem(key);
+      storageAvailable = true;
+      storageErrorMessage = "";
+    } catch {
+      storageAvailable = false;
+      storageErrorMessage =
+        lang === "ja"
+          ? "このブラウザでは入力内容を保存できません。プライベートブラウザをOFFにしてください。"
+          : "This browser does not allow saving answers. Please disable private/incognito mode.";
+    }
+  }
+
   /* -----------------------------
    * React to URL / params
    * --------------------------- */
@@ -24,6 +47,8 @@
 
     formId = $page.params.formId;
     lang = (params.get("lang") as "en" | "ja") || lang;
+
+    detectStorageAvailability();
 
     title = params.get("t") || t("forms.defaultTitle", lang);
     description = params.get("d") || "";
@@ -64,7 +89,6 @@
       });
     });
 
-    // fallback: merge local meta if exists
     const raw = localStorage.getItem(`stickyForm:meta:${formId}`);
     if (raw) {
       try {
@@ -84,6 +108,8 @@
    * Answer persistence
    * --------------------------- */
   function restoreAnswers() {
+    if (!storageAvailable) return;
+
     const raw = localStorage.getItem(answersKey());
     if (!raw) return;
 
@@ -95,14 +121,26 @@
   }
 
   function saveAnswers() {
-    localStorage.setItem(answersKey(), JSON.stringify(values));
+    if (!storageAvailable) return;
+
+    try {
+      localStorage.setItem(answersKey(), JSON.stringify(values));
+    } catch {
+      storageAvailable = false;
+    }
   }
 
   /* -----------------------------
    * Submit
    * --------------------------- */
   function submit() {
-    saveAnswers();
+    if (!storageAvailable) {
+      alert(
+        lang === "ja"
+          ? "この環境では入力内容を保存できません。必要であれば通常モードで開き直してください。"
+          : "Your answers cannot be saved in this browser mode."
+      );
+    }
 
     const params = new URLSearchParams();
 
@@ -136,6 +174,7 @@
     values = {};
   }
 </script>
+
 <section class="max-w-2xl mx-auto px-4 py-16">
 
     <!-- Hero -->
@@ -156,6 +195,18 @@
             </p>
         {/if}
     </div>
+
+    <!-- Storage warning -->
+    {#if !storageAvailable}
+        <div class="mb-8 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+            <p class="font-medium mb-1">
+                {lang === "ja" ? "保存ができない環境です" : "Saving is not available"}
+            </p>
+            <p>
+                {storageErrorMessage}
+            </p>
+        </div>
+    {/if}
 
     <!-- Info card -->
     <div class="mb-10 rounded-lg border bg-gray-50 p-5 text-sm text-gray-700">
