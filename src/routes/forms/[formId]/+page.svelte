@@ -191,7 +191,7 @@
 
         {#if author}
             <p class="text-xs text-gray-400 mt-1">
-                {author}
+                by {author}
             </p>
         {/if}
     </div>
