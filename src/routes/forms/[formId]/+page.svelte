@@ -175,7 +175,7 @@
   }
 </script>
 
-<section class="max-w-2xl mx-auto px-4 py-16">
+<section class="max-w-2xl mx-auto px-4 py-4">
 
     <!-- Hero -->
     <div class="mb-10">
