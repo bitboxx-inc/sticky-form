@@ -208,31 +208,6 @@
         </div>
     {/if}
 
-    <!-- Info card -->
-    <div class="mb-10 rounded-lg border bg-gray-50 p-5 text-sm text-gray-700">
-        <p class="font-medium mb-2">
-            {lang === "ja" ? "このフォームについて" : "About this form"}
-        </p>
-
-        <ul class="space-y-1 text-gray-600">
-            <li>
-                • {lang === "ja"
-              ? "入力内容はこの端末に保存されます"
-              : "Your answers are stored on this device"}
-            </li>
-            <li>
-                • {lang === "ja"
-              ? "次回以降、自動で入力されます"
-              : "Previously entered values are restored automatically"}
-            </li>
-            <li>
-                • {lang === "ja"
-              ? "データは外部に送信されません"
-              : "No data is sent to any server"}
-            </li>
-        </ul>
-    </div>
-
     <!-- Form card -->
     <div class="rounded-lg border bg-white p-6 space-y-6 mb-10">
         {#each fields as field}
@@ -333,9 +308,34 @@
         {t("forms.reset", lang) ?? "Reset saved answers"}
     </button>
 
-    <!-- Ad -->
-    <div class="mb-10">
-        <AdSlot />
+    <!-- Info card -->
+    <div class="mt-10 rounded-lg border bg-gray-50 p-5 text-sm text-gray-700">
+        <p class="font-medium mb-2">
+            {lang === "ja" ? "このフォームについて" : "About this form"}
+        </p>
+
+        <ul class="space-y-1 text-gray-600">
+            <li>
+                • {lang === "ja"
+              ? "入力内容はこの端末に保存されます"
+              : "Your answers are stored on this device"}
+            </li>
+            <li>
+                • {lang === "ja"
+              ? "次回以降、自動で入力されます"
+              : "Previously entered values are restored automatically"}
+            </li>
+            <li>
+                • {lang === "ja"
+              ? "データは外部に送信されません"
+              : "No data is sent to any server"}
+            </li>
+        </ul>
     </div>
+
+<!--    &lt;!&ndash; Ad &ndash;&gt;-->
+<!--    <div class="mb-10">-->
+<!--        <AdSlot />-->
+<!--    </div>-->
 
 </section>
