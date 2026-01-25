@@ -11,7 +11,13 @@
   let prefillUrl = "";
   let formId: string | null = null;
 
-  // Survey meta（URLに必ず含める）
+  // Draft control
+  let enableDraftSave = true;
+
+  // Prefill load error
+  let prefillLoadError: string | null = null;
+
+  // Survey meta
   let title = "無題のアンケート";
   let description = "";
   let author = "";
@@ -29,17 +35,19 @@
   /* -----------------------------
    * Draft restore
    * --------------------------- */
-  const draft = localStorage.getItem(DRAFT_KEY);
-  if (draft) {
-    try {
-      const d = JSON.parse(draft);
-      prefillUrl = d.prefillUrl ?? "";
-      formId = d.formId ?? null;
-      title = d.title ?? title;
-      description = d.description ?? "";
-      author = d.author ?? "";
-      fields = d.fields ?? fields;
-    } catch {}
+  if (enableDraftSave) {
+    const draft = localStorage.getItem(DRAFT_KEY);
+    if (draft) {
+      try {
+        const d = JSON.parse(draft);
+        prefillUrl = d.prefillUrl ?? "";
+        formId = d.formId ?? null;
+        title = d.title ?? title;
+        description = d.description ?? "";
+        author = d.author ?? "";
+        fields = d.fields ?? fields;
+      } catch {}
+    }
   }
 
   function extractFormId(path: string): string | null {
@@ -48,9 +56,18 @@
   }
 
   function saveDraft() {
+    if (!enableDraftSave) return;
+
     localStorage.setItem(
       DRAFT_KEY,
-      JSON.stringify({ prefillUrl, formId, title, description, author, fields })
+      JSON.stringify({
+        prefillUrl,
+        formId,
+        title,
+        description,
+        author,
+        fields
+      })
     );
   }
 
@@ -60,25 +77,50 @@
   }
 
   function parsePrefillUrl() {
+    prefillLoadError = null;
+
     if (!prefillUrl.trim()) return;
 
     try {
       const url = new URL(prefillUrl.trim());
-      const extracted = extractFormId(url.pathname);
-      if (!extracted) return;
 
-      formId = extracted;
+      if (!url.hostname.includes("google.com")) {
+        prefillLoadError =
+          "Google フォームのURLとして読み込めませんでした";
+        return;
+      }
+
+      const extracted = extractFormId(url.pathname);
+      if (!extracted) {
+        prefillLoadError =
+          "事前入力用の Google フォームURLではないようです";
+        return;
+      }
 
       const next: StickyField[] = [];
 
       url.searchParams.forEach((v, k) => {
         if (!k.startsWith("entry.")) return;
-        next.push({ id: k, label: decodeURIComponent(v), type: "text" });
+        next.push({
+          id: k,
+          label: decodeURIComponent(v),
+          type: "text"
+        });
       });
 
+      if (next.length === 0) {
+        prefillLoadError =
+          "入力項目が含まれていないため、読み込めませんでした";
+        return;
+      }
+
+      formId = extracted;
       fields = next;
       markDirty();
-    } catch {}
+    } catch {
+      prefillLoadError =
+        "URLの形式が正しくないため、読み込めませんでした";
+    }
   }
 
   function addField() {
@@ -128,10 +170,7 @@
     fields.forEach((f) => {
       if (!f.id || !f.label) return;
 
-      // 元の entry（Google Forms 用）
       params.append(f.id, f.label);
-
-      // sticky-form 用メタ
       params.append(`${f.id}__type`, f.type);
 
       if ((f.type === "radio" || f.type === "checkbox") && f.options?.length) {
@@ -177,6 +216,19 @@
     <p class="text-sm text-gray-600 mb-10">
         {t("new.description", lang)}
     </p>
+
+    <!-- Draft toggle -->
+    <div class="mb-8 flex items-center gap-2">
+        <input
+                id="draftToggle"
+                type="checkbox"
+                bind:checked={enableDraftSave}
+                class="rounded border-gray-300"
+        />
+        <label for="draftToggle" class="text-sm text-gray-700">
+            入力内容をブラウザに保存する
+        </label>
+    </div>
 
     <!-- Survey meta -->
     <div class="mb-10 space-y-4">
@@ -230,9 +282,11 @@
                 class="w-full rounded-md border px-3 py-2 text-sm"
         />
 
-        <p class="text-xs text-gray-500 mt-2 whitespace-pre-line">
-            {t("new.prefillHint", lang)}
-        </p>
+        {#if prefillLoadError}
+            <p class="text-xs text-amber-600 mt-2">
+                {prefillLoadError}
+            </p>
+        {/if}
     </div>
 
     <!-- Sticky fields -->
@@ -240,6 +294,10 @@
         <label class="block text-sm font-medium mb-3">
             {t("new.stickyFields", lang)}
         </label>
+
+        <p class="text-xs text-gray-500 my-2 whitespace-pre-line">
+            {t("new.prefillHint", lang)}
+        </p>
 
         <div class="space-y-4">
             {#each fields as field, i}
@@ -281,26 +339,22 @@
                             <option value="checkbox">Checkbox</option>
                         </select>
                     </div>
+
                     {#if field.type === "radio" || field.type === "checkbox"}
                         <input
                                 type="text"
-                                placeholder={t("new.optionsPlaceholder", lang) || "Options (comma separated)"}
+                                placeholder={t("new.optionsPlaceholder", lang)}
                                 value={(field.options ?? []).join(", ")}
                                 on:input={(e) => {
-                                  field.options = e.currentTarget.value
-                                    .split(",")
-                                    .map(v => v.trim())
-                                    .filter(Boolean);
-                                  fields = [...fields];
-                                  markDirty();
-                                }}
+                field.options = e.currentTarget.value
+                  .split(",")
+                  .map(v => v.trim())
+                  .filter(Boolean);
+                fields = [...fields];
+                markDirty();
+              }}
                                 class="w-full rounded-md border px-2 py-1 text-sm"
                         />
-
-                        <p class="text-xs text-gray-500 mt-1">
-                            {t("new.optionsHint", lang) ||
-                            "Enter the same option labels as defined in Google Forms."}
-                        </p>
                     {/if}
                 </div>
             {/each}
@@ -319,23 +373,10 @@
         >
             {isGenerated ? t("new.regenerate", lang) : t("new.generate", lang)}
         </button>
-
-        {#if isGenerated && !isDirty}
-            <p class="text-xs text-green-600 mt-2 text-center">
-                {t("new.generatedOk", lang)}
-            </p>
-        {/if}
-
-        {#if isGenerated && isDirty}
-            <p class="text-xs text-amber-600 mt-2 text-center">
-                {t("new.needsRegenerate", lang)}
-            </p>
-        {/if}
     </div>
 
-    <!-- Generated result -->
     {#if isGenerated}
-        <div class="border-t border-gray-200 pt-8">
+        <div class="border-t pt-8">
             <div class="flex gap-2 mb-6">
                 <input
                         type="text"
@@ -349,7 +390,7 @@
             </div>
 
             <div class="flex justify-center">
-                <img src={qrDataUrl} alt="QR code"/>
+                <img src={qrDataUrl} alt="QR code" />
             </div>
         </div>
     {/if}
@@ -357,8 +398,8 @@
     {#if showToast}
         <div
                 class="fixed bottom-6 left-1/2 -translate-x-1/2
-             bg-gray-900 text-white
-             px-4 py-2 text-sm rounded-md"
+      bg-gray-900 text-white
+      px-4 py-2 text-sm rounded-md"
         >
             {t("common.copied", lang) || "Link copied"}
         </div>
